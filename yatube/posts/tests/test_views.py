@@ -81,7 +81,7 @@ class PostPagesTests(TestCase):
         """Шаблон post_detail сформирован с правильным контекстом."""
         response = self.author_client.get(
             reverse('posts:post_detail', kwargs={'post_id': self.post.id})
-            )
+        )
         first_object = response.context.get('post')
         post_group_0 = first_object.group.slug
         post_author_0 = first_object.author

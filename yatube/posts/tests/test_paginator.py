@@ -33,11 +33,9 @@ class PaginatorTest(TestCase):
         """Из тринадцати страниц, на первой отображается 10,
         на второй - пять"""
         templates_page_names = {
-                reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
-                reverse('posts:index'),
-                reverse('posts:profile',
-                        kwargs={'username': self.user.username}
-                        ),
+            reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
+            reverse('posts:index'),
+            reverse('posts:profile', kwargs={'username': self.user.username}),
         }
         for reverse_name in templates_page_names:
             response = self.guest_client.get(reverse_name)
