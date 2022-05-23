@@ -1,8 +1,8 @@
+from http import HTTPStatus
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-
-from http import HTTPStatus
 
 from posts.models import Group, Post
 from posts.forms import PostForm
@@ -24,10 +24,8 @@ class PostFormTest(TestCase):
             author=cls.user,
             text='Тестовый пост',
         )
-        cls.form = PostForm()
 
     def setUp(self):
-        self.guest_client = Client()
         self.author_client = Client()
         self.author_client.force_login(self.user)
 
@@ -49,16 +47,13 @@ class PostFormTest(TestCase):
             'posts:profile',
             kwargs={'username': self.user.username}))
         self.assertTrue(Post.objects.filter(
-            group__slug='test-slug',
+            group__slug=self.group.slug,
             text='Новый пост',
+            author=self.post.author,
         ).exists())
 
         def test_edit_post_form(self):
             """Пост изменяется с помощью формы"""
-            test_post = Post.objects.create(
-                author=self.user,
-                text='Тестовый пост',
-            )
             form_data = {
                 'text': 'Измененный пост',
                 'group': self.group.id,
@@ -70,11 +65,12 @@ class PostFormTest(TestCase):
                 data=form_data,
                 follow=True
             )
-            self.assertEqual(Post.objects.count(), posts_count + 1)
+            self.assertEqual(Post.objects.count(), posts_count)
             self.assertRedirects(response, reverse(
                 'posts:post_detail',
-                kwargs={'post_id': test_post.pk}))
+                kwargs={'post_id': self.post.pk}))
             self.assertTrue(Post.objects.filter(
-                group__slug='test-slug',
+                group__slug=self.group.slug,
                 text='Новый пост',
+                post=self.post.id,
             ).exists())
