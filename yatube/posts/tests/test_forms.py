@@ -5,7 +5,6 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from posts.models import Group, Post
-from posts.forms import PostForm
 
 User = get_user_model()
 
@@ -61,7 +60,7 @@ class PostFormTest(TestCase):
             posts_count = Post.objects.count()
             response = self.author_client.post(
                 reverse('posts:post_create'),
-                kwargs={'post_id': test_post.pk},
+                kwargs={'post_id': self.post.pk},
                 data=form_data,
                 follow=True
             )
