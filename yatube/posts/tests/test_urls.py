@@ -1,7 +1,8 @@
+from http import HTTPStatus
+
+from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
-
-from http import HTTPStatus
 
 from posts.models import Group, Post
 
@@ -30,6 +31,25 @@ class GroupPostURLTests(TestCase):
         self.user1 = User.objects.create_user(username='NotAuthor')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user1)
+
+        def test_pages_uses_correct_template(self):
+            templates_page_names = {
+                reverse('posts:group_posts', kwargs={'slug': self.group.slug}):
+                    'posts/group_list.html',
+                reverse('posts:index'): 'posts/index.html',
+                reverse(
+                    'posts:profile', kwargs={'username': self.user.username}
+                ): 'posts/profile.html',
+                reverse('posts:post_detail', kwargs={'post_id': self.post.id}):
+                    'posts/post_detail.html',
+                reverse('posts:post_create'): 'posts/create_post.html',
+                reverse('posts:post_edit', kwargs={'post_id': self.post.id}):
+                    'posts/create_post.html',
+            }
+            for reverses, template in templates_page_names.items():
+                with self.subTest(reverse_name=reverses, template=template):
+                    response = self.author_client.get(reverses)
+                    self.assertTemplateUsed(response, template)
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""

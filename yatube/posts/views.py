@@ -78,6 +78,6 @@ def post_edit(request, post_id):
         return redirect('posts:post_detail', post_id=post_id)
     context = {
         'form': form,
-        'is_edit': True,
+        'post': post,
     }
     return render(request, 'posts/create_post.html', context)

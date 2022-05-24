@@ -19,7 +19,7 @@ class PaginatorTest(TestCase):
             slug='test-slug',
             description='Тестовое описание группы',
         )
-        cls.posts_number = 55
+        cls.posts_number = 13
         pile_of_posts = [Post(
             author=cls.user,
             group=cls.group,
@@ -33,7 +33,9 @@ class PaginatorTest(TestCase):
         self.guest_client = Client()
 
     def test_first_two_pages_contain_ten_and_thirteen_records(self):
-        """"""
+        """Вывод 10 постов на странице, а так же остаточного кол-ва постов
+        на последней странице
+        """
         pages_with_pagination = {
             reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
             reverse('posts:index'),
