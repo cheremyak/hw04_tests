@@ -12,7 +12,7 @@ class PostPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username='NoNameAuthor')
         cls.group = Group.objects.create(
             title='Тестовое название группы',
             slug='test-slug',
@@ -47,6 +47,34 @@ class PostPagesTests(TestCase):
             with self.subTest(reverse_name=reverse_name):
                 response = self.author_client.get(reverse_name)
                 self.assertIn(self.post, response.context.get('page_obj'))
+
+    def test_group_posts_context(self):
+        """Шаблон группы сформирован с правильным контекстом"""
+        response = self.author_client.get(
+            reverse('posts:group_posts', kwargs={'slug': self.group.slug})
+        )
+        self.assertEqual(response.context.get('group'), self.post.group)
+
+    def test_author_profile_context(self):
+        """Шаблон profile сформирован с правильным контекстом"""
+        response = self.author_client.get(
+            reverse('posts:profile', kwargs={'username': self.user.username})
+        )
+        self.assertEqual(response.context.get('author'), self.user)
+    
+    def test_both_profile_and_group_show_correct_context(self):
+        """Шаблоны group_posts и  profile сформированы
+        с правильным контекстом
+        """
+        templates_page_names = [
+            ('posts:group_posts', 'group', self.group.slug),
+            ('posts:profile', 'author', self.user.id),
+        ]
+        for page, context_name, expected in templates_page_names:
+            reverse_name = reverse(page, args=expected)
+            with self.subTest(reverse_name=reverse_name):
+                response = self.author_client.get(reverse_name)
+                self.assertEqual(response.context.get(context_name), expected)
 
     def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
