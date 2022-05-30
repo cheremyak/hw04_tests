@@ -30,76 +30,49 @@ class GroupPostURLTests(TestCase):
         )
         cls.user_not_author = User.objects.create_user(username='NotAuthor')
 
+        cls.urls = (
+            ('posts:group_posts', (cls.group.slug,), 'posts/group_list.html'),
+            ('posts:index', None, 'posts/index.html'),
+            ('posts:profile', (cls.user,), 'posts/profile.html'),
+            ('posts:post_detail', (cls.post.id,), 'posts/post_detail.html'),
+            ('posts:post_create', None, 'posts/create_post.html'),
+            ('posts:post_edit', (cls.post.id,), 'posts/create_post.html'),
+        )
+
     def setUp(self):
         self.guest_client = Client()
         self.author_client = Client()
         self.author_client.force_login(self.user)
 
-    def test_urls_uses_correct_template(self):
-        """URL-адрес использует соответствующий шаблон"""
-        templates_url_names = {
-            '/': 'posts/index.html',
-            '/group/test-slug/': 'posts/group_list.html',
-            '/profile/NoNameAuthor/': 'posts/profile.html',
-            '/posts/1/': 'posts/post_detail.html',
-            '/create/': 'posts/create_post.html',
-            '/posts/1/edit/': 'posts/create_post.html',
-        }
-        for url, template in templates_url_names.items():
-            with self.subTest(url=url, template=template):
-                response = self.author_client.get(url)
-                self.assertTemplateUsed(response, template)
-
     def test_pages_uses_correct_template(self):
         """reverse_name страниц используют соответствующий шаблон"""
-        templates_page_names = {
-            reverse('posts:group_posts', kwargs={'slug': self.group.slug}):
-                'posts/group_list.html',
-            reverse('posts:index'): 'posts/index.html',
-            reverse(
-                'posts:profile', kwargs={'username': self.user.username}
-            ): 'posts/profile.html',
-            reverse('posts:post_detail', kwargs={'post_id': self.post.id}):
-                'posts/post_detail.html',
-            reverse('posts:post_create'): 'posts/create_post.html',
-            reverse('posts:post_edit', kwargs={'post_id': self.post.id}):
-                'posts/create_post.html',
-        }
-        for reverses, template in templates_page_names.items():
-            with self.subTest(reverse_name=reverses, template=template):
-                response = self.author_client.get(reverses)
+        for url, args, template in self.urls:
+            reverse_name = reverse(url, args=args)
+            with self.subTest(reverse_name=reverse_name, template=template):
+                response = self.author_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
     def test_pages_exist_at_desired_location(self):
-        """Страницы, доступные неавторизованному пользователю"""
-        pages_status = {
-            '/': HTTPStatus.OK,
-            '/group/test-slug/': HTTPStatus.OK,
-            '/profile/NoNameAuthor/': HTTPStatus.OK,
-            '/posts/1/': HTTPStatus.OK,
-            '/page_doesnt_exist/': HTTPStatus.NOT_FOUND,
-        }
-        for page, status in pages_status.items():
-            with self.subTest(page=page, status=status):
-                response = self.guest_client.get(page)
-                self.assertEqual(response.status_code, status)
+        """Страницы, доступные авторизованному пользователю"""
+        for url, args, _ in self.urls:
+            reverse_name = reverse(url, args=args)
+            with self.subTest(reverse_name=reverse_name):
+                response = self.author_client.get(reverse_name)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
+        else:
+            response = self.author_client.get('/page_doesnt_exist/')
+            self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_post_edit_page_exists_at_desired_location(self):
-        """Страница редактирования поста доступна автору"""
-        response = self.author_client.get('/posts/1/edit/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    #def test_post_edit_page_redirects_not_author_on_post_page(self):
-     #   """Страница редактирования поста отправит неАвтора на страницу поста"""
-      #  response = self.user_not_author.get('/posts/1/edit/')
-       # self.assertRedirects(response, '/posts/1/')
-
-    def test_post_create_page_exists_at_desired_location(self):
-        """Страница создания поста доступна авторизованному пользователю"""
-        response = self.author_client.get('/create/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+    def test_post_edit_page_redirects_not_author_on_post_page(self):
+        """Страница редактирования поста отправит неАвтора на страницу поста"""
+        self.author_client.force_login(self.user_not_author)
+        response = self.author_client.get(reverse(
+            'posts:post_edit',
+            kwargs={'post_id': self.post.id}
+        ))
+        self.assertRedirects(response, '/posts/1/')
 
     def test_post_create_page_redirects_not_author_on_post_page(self):
         """Страница создания поста перенаправит неАвтора на страницу поста"""
-        response = self.guest_client.get('/create/')
+        response = self.guest_client.get(reverse('posts:post_create'))
         self.assertRedirects(response, '/auth/login/?next=/create/')

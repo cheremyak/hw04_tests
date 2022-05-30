@@ -17,6 +17,7 @@ class PostPagesTests(TestCase):
             title='Тестовое название группы',
             slug='test-slug',
             description='Тестовое описание группы',
+
         )
         cls.post = Post.objects.create(
             text='Тестовый текст поста',
@@ -48,30 +49,19 @@ class PostPagesTests(TestCase):
                 response = self.author_client.get(reverse_name)
                 self.assertIn(self.post, response.context.get('page_obj'))
 
-    def test_group_posts_context(self):
-        """Шаблон группы сформирован с правильным контекстом"""
-        response = self.author_client.get(
-            reverse('posts:group_posts', kwargs={'slug': self.group.slug})
-        )
-        self.assertEqual(response.context.get('group'), self.post.group)
-
-    def test_author_profile_context(self):
-        """Шаблон profile сформирован с правильным контекстом"""
-        response = self.author_client.get(
-            reverse('posts:profile', kwargs={'username': self.user.username})
-        )
-        self.assertEqual(response.context.get('author'), self.user)
-    
     def test_both_profile_and_group_show_correct_context(self):
         """Шаблоны group_posts и  profile сформированы
         с правильным контекстом
         """
         templates_page_names = [
-            ('posts:group_posts', 'group', self.group.slug),
-            ('posts:profile', 'author', self.user.id),
+            (reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
+                'group',
+                self.group),
+            (reverse('posts:profile', kwargs={'username': self.user.username}),
+                'author',
+                self.user),
         ]
-        for page, context_name, expected in templates_page_names:
-            reverse_name = reverse(page, args=expected)
+        for reverse_name, context_name, expected in templates_page_names:
             with self.subTest(reverse_name=reverse_name):
                 response = self.author_client.get(reverse_name)
                 self.assertEqual(response.context.get(context_name), expected)
