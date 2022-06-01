@@ -1,8 +1,9 @@
+import math
+
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.core.paginator import Paginator
 
 from posts.models import Group, Post
 
@@ -19,15 +20,15 @@ class PaginatorTest(TestCase):
             slug='test-slug',
             description='Тестовое описание группы',
         )
-        cls.posts_number = 13
+        cls.POSTS_NUMBER = 20
         pile_of_posts = [Post(
             author=cls.user,
             group=cls.group,
-            text='Тестовый пост' + str(post))
-            for post in range(cls.posts_number)
+            text=f'Тестовый пост {str(i)}'
+        )
+            for i in range(cls.POSTS_NUMBER)
         ]
         Post.objects.bulk_create(pile_of_posts)
-        cls.p = Paginator(pile_of_posts, settings.POSTS_LIMIT)
 
     def setUp(self):
         self.guest_client = Client()
@@ -36,6 +37,8 @@ class PaginatorTest(TestCase):
         """Вывод 10 постов на странице, а так же остаточного кол-ва постов
         на последней странице
         """
+        page_number = math.ceil(self.POSTS_NUMBER / settings.POSTS_LIMIT)
+        last_page_posts = self.POSTS_NUMBER % settings.POSTS_LIMIT
         pages_with_pagination = {
             reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
             reverse('posts:index'),
@@ -48,9 +51,12 @@ class PaginatorTest(TestCase):
                 settings.POSTS_LIMIT
             )
             response = self.guest_client.get(
-                reverse_name + '?page=' + str(self.p.num_pages)
+                reverse_name + '?page=' + str(page_number)
             )
-            self.assertEqual(
-                len(response.context['page_obj']),
-                self.p.count % settings.POSTS_LIMIT
-            )
+            if last_page_posts == 0:
+                self.assertEqual(
+                    len(response.context['page_obj']), settings.POSTS_LIMIT
+                )
+            else:
+                self.assertEqual(
+                    len(response.context['page_obj']), last_page_posts)
