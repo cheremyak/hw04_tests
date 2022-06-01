@@ -38,7 +38,7 @@ class GroupPostURLTests(TestCase):
              'posts/create_post.html', HTTPStatus.OK),
             (reverse('posts:post_edit', kwargs={'post_id': cls.post.id}),
              'posts/create_post.html', HTTPStatus.OK),
-            ('unexisting', None, HTTPStatus.NOT_FOUND),
+            ('unexisting_page', None, HTTPStatus.NOT_FOUND),
         )
 
     def setUp(self):
