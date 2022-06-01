@@ -27,17 +27,18 @@ class GroupPostURLTests(TestCase):
         cls.user_not_author = User.objects.create_user(username='NotAuthor')
 
         cls.urls = (
-            ('posts:group_posts', (cls.group.slug,), 'posts/group_list.html',
-             HTTPStatus.OK),
-            ('posts:index', None, 'posts/index.html', HTTPStatus.OK),
-            ('posts:profile', (cls.user,), 'posts/profile.html',
-             HTTPStatus.OK),
-            ('posts:post_detail', (cls.post.id,), 'posts/post_detail.html',
-             HTTPStatus.OK),
-            ('posts:post_create', None, 'posts/create_post.html',
-             HTTPStatus.OK),
-            ('posts:post_edit', (cls.post.id,), 'posts/create_post.html',
-             HTTPStatus.OK),
+            (reverse('posts:group_posts', kwargs={'slug': cls.group.slug}),
+             'posts/group_list.html', HTTPStatus.OK),
+            (reverse('posts:index'), 'posts/index.html', HTTPStatus.OK),
+            (reverse('posts:profile', kwargs={'username': cls.post.author}),
+             'posts/profile.html', HTTPStatus.OK),
+            (reverse('posts:post_detail', kwargs={'post_id': cls.post.id}),
+             'posts/post_detail.html', HTTPStatus.OK),
+            (reverse('posts:post_create'),
+             'posts/create_post.html', HTTPStatus.OK),
+            (reverse('posts:post_edit', kwargs={'post_id': cls.post.id}),
+             'posts/create_post.html', HTTPStatus.OK),
+            ('unexisting', None, HTTPStatus.NOT_FOUND),
         )
 
     def setUp(self):
@@ -47,19 +48,18 @@ class GroupPostURLTests(TestCase):
 
     def test_pages_uses_correct_template(self):
         """reverse_name страниц используют соответствующий шаблон"""
-        for url, args, template, status_code in self.urls:
-            reverse_name = reverse(url, args=args)
-            with self.subTest(reverse_name=reverse_name, template=template):
-                response = self.author_client.get(reverse_name)
-                self.assertTemplateUsed(response, template)
+        for url, template, status in self.urls:
+            if template is not None:
+                with self.subTest(url=url):
+                    response = self.author_client.get(url)
+                    self.assertTemplateUsed(response, template)
 
     def test_pages_exist_at_desired_location(self):
         """Страницы, доступные авторизованному пользователю"""
-        for url, args, teplate, expected_status in self.urls:
-            reverse_name = reverse(url, args=args)
-            with self.subTest(reverse_name=reverse_name):
-                response = self.author_client.get(reverse_name)
-                self.assertEqual(response.status_code, expected_status)
+        for url, template, status in self.urls:
+            with self.subTest(url=url):
+                response = self.author_client.get(url)
+                self.assertEqual(response.status_code, status)
 
     def test_post_edit_page_redirects_not_author_on_post_page(self):
         """Страница редактирования поста отправит неАвтора на страницу поста"""

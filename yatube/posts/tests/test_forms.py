@@ -1,5 +1,3 @@
-from http import HTTPStatus
-
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -40,15 +38,14 @@ class PostFormTest(TestCase):
             data=form_data,
             follow=True
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertRedirects(response, reverse(
             'posts:profile',
             kwargs={'username': self.user.username}))
         self.assertTrue(Post.objects.filter(
             group__slug=self.group.slug,
-            text='Новый пост',
-            author=self.post.author,
+            text=form_data.get('text'),
+            author=form_data.get('group'),
         ).exists())
 
         def test_edit_post_form(self):
@@ -59,7 +56,7 @@ class PostFormTest(TestCase):
             }
             posts_count = Post.objects.count()
             response = self.author_client.post(
-                reverse('posts:post_create'),
+                reverse('posts:post_edit'),
                 kwargs={'post_id': self.post.pk},
                 data=form_data,
                 follow=True
@@ -70,6 +67,6 @@ class PostFormTest(TestCase):
                 kwargs={'post_id': self.post.pk}))
             self.assertTrue(Post.objects.filter(
                 group__slug=self.group.slug,
-                text='Новый пост',
-                post=self.post.id,
+                text=form_data.get('text'),
+                post=form_data.get('group'),
             ).exists())

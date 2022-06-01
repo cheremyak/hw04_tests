@@ -79,7 +79,10 @@ class PostPagesTests(TestCase):
             reverse('posts:post_edit', kwargs={'post_id': self.post.id})
         )
         self.assertIsInstance(response.context.get('form'), PostForm)
-        self.assertEqual(response.context.get('post'), self.post)
+        self.assertEqual(response.context.get(
+            'form').initial['text'],
+            self.post.text
+        )
 
     def test_create_page_show_correct_context(self):
         """Шаблон post_create сформирован с правильным контекстом."""
