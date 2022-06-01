@@ -50,9 +50,8 @@ class PaginatorTest(TestCase):
                 settings.POSTS_LIMIT
             )
             response = self.guest_client.get(
-                reverse_name + '?page=' + str(math.ceil(
-                    self.POSTS_NUMBER / settings.POSTS_LIMIT
-                    )
+                reverse_name + '?page=' + str(
+                    math.ceil(self.POSTS_NUMBER / settings.POSTS_LIMIT)
                 )
             )
             if last_page_posts == 0:
