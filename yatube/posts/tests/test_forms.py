@@ -45,7 +45,7 @@ class PostFormTest(TestCase):
         self.assertTrue(Post.objects.filter(
             group__slug=self.group.slug,
             text=form_data.get('text'),
-            author=form_data.get('group'),
+            author=self.user,
         ).exists())
 
         def test_edit_post_form(self):
@@ -68,5 +68,5 @@ class PostFormTest(TestCase):
             self.assertTrue(Post.objects.filter(
                 group__slug=self.group.slug,
                 text=form_data.get('text'),
-                post=form_data.get('group'),
+                post=self.post.id,
             ).exists())

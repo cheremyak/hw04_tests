@@ -37,7 +37,6 @@ class PaginatorTest(TestCase):
         """Вывод 10 постов на странице, а так же остаточного кол-ва постов
         на последней странице
         """
-        page_number = math.ceil(self.POSTS_NUMBER / settings.POSTS_LIMIT)
         last_page_posts = self.POSTS_NUMBER % settings.POSTS_LIMIT
         pages_with_pagination = {
             reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
@@ -51,7 +50,10 @@ class PaginatorTest(TestCase):
                 settings.POSTS_LIMIT
             )
             response = self.guest_client.get(
-                reverse_name + '?page=' + str(page_number)
+                reverse_name + '?page=' + str(math.ceil(
+                    self.POSTS_NUMBER / settings.POSTS_LIMIT
+                    )
+                )
             )
             if last_page_posts == 0:
                 self.assertEqual(
