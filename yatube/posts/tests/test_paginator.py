@@ -24,9 +24,9 @@ class PaginatorTest(TestCase):
         pile_of_posts = [Post(
             author=cls.user,
             group=cls.group,
-            text=f'Тестовый пост {str(i)}'
+            text=f'Тестовый пост {str(number)}'
         )
-            for i in range(cls.POSTS_NUMBER)
+            for number in range(cls.POSTS_NUMBER)
         ]
         Post.objects.bulk_create(pile_of_posts)
 
@@ -37,7 +37,9 @@ class PaginatorTest(TestCase):
         """Вывод 10 постов на странице, а так же остаточного кол-ва постов
         на последней странице
         """
-        last_page_posts = self.POSTS_NUMBER % settings.POSTS_LIMIT
+        last_page_posts = int(self.POSTS_NUMBER - (math.ceil(self.POSTS_NUMBER
+                              / settings.POSTS_LIMIT) - 1)
+                              * settings.POSTS_LIMIT)
         pages_with_pagination = {
             reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
             reverse('posts:index'),
@@ -54,10 +56,5 @@ class PaginatorTest(TestCase):
                     math.ceil(self.POSTS_NUMBER / settings.POSTS_LIMIT)
                 )
             )
-            if last_page_posts == 0:
-                self.assertEqual(
-                    len(response.context['page_obj']), settings.POSTS_LIMIT
-                )
-            else:
-                self.assertEqual(
-                    len(response.context['page_obj']), last_page_posts)
+            self.assertEqual(
+                len(response.context['page_obj']), last_page_posts)

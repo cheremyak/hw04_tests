@@ -71,7 +71,7 @@ class GroupPostURLTests(TestCase):
             'posts:post_edit',
             kwargs={'post_id': self.post.id}
         ))
-        self.assertRedirects(response, f'{reverse_post_detail}')
+        self.assertRedirects(response, reverse_post_detail)
 
     def test_post_create_page_redirects_not_author_on_post_page(self):
         """Страница создания поста перенаправит неАвтора на страницу поста"""
