@@ -39,6 +39,11 @@ class Post(models.Model):
         verbose_name='Группа',
         help_text='Группа, к которой будет относиться пост'
     )
+    image = models.ImageField(
+        'Картинка',
+        upload_to='posts/',
+        blank=True
+    )
 
     def __str__(self):
         return self.text[:settings.LETTERS_LIMIT]
@@ -46,3 +51,4 @@ class Post(models.Model):
     class Meta:
         ordering = ('-pub_date',)
         verbose_name = 'Запись'
+        verbose_name_plural = 'Посты'

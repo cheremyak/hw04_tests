@@ -20,7 +20,7 @@ class PaginatorTest(TestCase):
             slug='test-slug',
             description='Тестовое описание группы',
         )
-        cls.POSTS_NUMBER = 20
+        cls.POSTS_NUMBER = 15
         pile_of_posts = [Post(
             author=cls.user,
             group=cls.group,
