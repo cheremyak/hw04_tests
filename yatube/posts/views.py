@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .models import Group, Post, User
-from .forms import PostForm
+from .forms import PostForm, CommentForm
 from .utils import get_paginate
 
 
@@ -45,10 +45,14 @@ def profile(request, username):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post.objects.select_related('author'), id=post_id)
+    comment_form = CommentForm(request.POST or None)
+    comments = post.comments.all()
     author = post.author
     context = {
         'author': author,
         'post': post,
+        'form': comment_form,
+        'comments': comments,
     }
     return render(request, 'posts/post_detail.html', context)
 
@@ -85,3 +89,15 @@ def post_edit(request, post_id):
         'post': post,
     }
     return render(request, 'posts/create_post.html', context)
+
+
+@login_required
+def add_comment(request, post_id):
+    post = get_object_or_404(Post.objects.select_related('author'), pk=post_id)
+    form = CommentForm(request.POST or None)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        comment.save()
+    return redirect('posts:post_detail', post_id=post_id)
