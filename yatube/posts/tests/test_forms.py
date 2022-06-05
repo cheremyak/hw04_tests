@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 
-from posts.models import Group, Post
+from posts.models import Group, Post, Comment
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -76,25 +76,44 @@ class PostFormTest(TestCase):
             image='posts/small.gif'
         ).exists())
 
-        def test_edit_post_form(self):
-            """Пост изменяется с помощью формы"""
-            form_data = {
-                'text': 'Измененный пост',
-                'group': self.group.id,
-            }
-            posts_count = Post.objects.count()
-            response = self.author_client.post(
-                reverse('posts:post_edit'),
-                kwargs={'post_id': self.post.pk},
-                data=form_data,
-                follow=True
-            )
-            self.assertEqual(Post.objects.count(), posts_count)
-            self.assertRedirects(response, reverse(
-                'posts:post_detail',
-                kwargs={'post_id': self.post.pk}))
-            self.assertTrue(Post.objects.filter(
-                group__slug=self.group.slug,
-                text=form_data.get('text'),
-                post=self.post.id,
+    def test_edit_post_form(self):
+        """Пост изменяется с помощью формы"""
+        form_data = {
+            'text': 'Измененный пост',
+            'group': self.group.id,
+        }
+        posts_count = Post.objects.count()
+        response = self.author_client.post(
+            reverse('posts:post_edit', kwargs={'post_id': self.post.pk}),
+            data=form_data,
+            follow=True,
+        )
+        self.assertEqual(Post.objects.count(), posts_count)
+        self.assertRedirects(response, reverse(
+            'posts:post_detail',
+            kwargs={'post_id': self.post.pk}))
+        self.assertTrue(Post.objects.filter(
+            group__slug=self.group.slug,
+            text=form_data.get('text'),
+        ).exists())
+
+    def test_comment_form(self):
+        """Авторизованный пользователь комментирует посты
+        и комментарий появляется на странице поста
+        """
+        form_data = {
+            'text': 'Тестовый комент',
+        }
+        comment_count = Comment.objects.count()
+        response = self.author_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': self.post.pk}),
+            data=form_data,
+            follow=True
+        )
+        self.assertEqual(Comment.objects.count(), comment_count + 1)
+        self.assertRedirects(response, reverse(
+            'posts:post_detail',
+            kwargs={'post_id': self.post.pk}))
+        self.assertTrue(Comment.objects.filter(
+            text=form_data.get('text'),
             ).exists())
